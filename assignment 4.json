@@ -1,0 +1,163 @@
+{
+  "name": "assignment 4",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3ec8d7a4-0e29-4969-8f46-3f698dd451ba",
+      "name": "When chat message received",
+      "webhookId": "c5a7eeb9-8fae-4c11-b94c-a8b4b1780a91"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a Calendar AI Agent responsible for blocking time slots on Google Calendar based on user chat input.\n\nYour role is to understand natural language scheduling requests such as:\n“Block my calendar tomorrow at 2 PM for a meeting”\n\nYou must extract:\n• Date  \n• Start time  \n• Event title/description  \n• Duration (default to 60 minutes if not provided)\n\n--------------------------------\nTASK FLOW\n--------------------------------\n\n1. Receive user input from Chat Trigger.\n\n2. Parse the message to identify:\n   - Event name\n   - Date\n   - Time\n\nIf any required detail is missing, politely ask the user.\n\n3. Convert natural language into structured date-time format.\n\n4. Use Google Calendar node → Create Event to block the time slot.\n\n5. After successful booking, respond in chat with confirmation:\n   - Event name\n   - Date\n   - Time\n\n--------------------------------\nCONFLICT HANDLING\n--------------------------------\n\nBefore creating an event:\n- Check existing events using Google Calendar → Get Events.\n- Prevent overlapping bookings.\n\nIf conflict exists:\n- Inform the user\n- Suggest alternative available times.\n\n--------------------------------\nCOMMUNICATION STYLE\n--------------------------------\n\nBe clear and professional.\nConfirm every successful block.\nExplain conflicts politely.\n\n--------------------------------\nERROR HANDLING\n--------------------------------\n\nIf calendar creation fails:\nInform user and request retry.\n\n--------------------------------\nFINAL GOAL\n--------------------------------\n\nAccurately understand natural language calendar requests and block time slots on Google Calendar while confirming the booking via chat.\n\ncalendar name is assignment 4\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "f82b91f6-6b48-4d12-b2b9-7f0771e9e3ed",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        96,
+        208
+      ],
+      "id": "d8a51079-2266-47d7-aa2d-bb7e011f9d27",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "x1IpWZxbh9DSZkl3",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        208
+      ],
+      "id": "66d3bade-f531-4d73-b89c-83c7d843cd75",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "npavankumar553@gmail.com",
+          "mode": "list",
+          "cachedResultName": "npavankumar553@gmail.com"
+        },
+        "additionalFields": {
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        384,
+        208
+      ],
+      "id": "aa125765-86b8-4694-a7d7-b59d65337b7c",
+      "name": "Assignment 4",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "IZvqpAugMqbs2eEn",
+          "name": "Google Calendar account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        []
+      ]
+    },
+    "Assignment 4": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "10173445-46d4-4004-8758-7f59ebd4842a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "14ed5357ef305770d439ea6f97e30ae69b74eaea9ad045f5c49d8370df80c0fc"
+  },
+  "id": "nQYCzuIGPZvm7vFbNBzFD",
+  "tags": []
+}
