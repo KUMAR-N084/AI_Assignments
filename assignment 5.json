@@ -1,0 +1,260 @@
+{
+  "name": "assignment 5",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Hi there! 👋\nI am Dr. Strange's assistant. How may I assist you today?",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        1456,
+        160
+      ],
+      "id": "f39b7c68-c43c-408d-a43c-a44b34519aab",
+      "name": "When chat message received",
+      "webhookId": "a1524b84-3290-49ca-a0dc-3bd727d1d95e"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=You are an AI scheduling assistant ONLY for Dr. Strange.\n\nUnderstand natural language requests and book appointments using:\n\n• Calendar \"appointments\" → GET events only  \n• Calendar \"dr.strange\" → CREATE events only  \n• Google Sheets → Store appointment data  \n• Email → Send confirmation\n\nCurrent date/time: {{$name}}\n\nIf user asks about other doctors, medical advice, or unrelated topics reply:\n\"I only help book appointments for Dr. Strange.\"\n\n--------------------------------\n\nBefore booking, collect:\n• Full Name\n• Email\n• Mobile Number\n\n--------------------------------\nRULES\n--------------------------------\n\n• Booking time: 10 AM – 8 PM  \n• Lunch: 1 PM – 2 PM blocked  \n• Sunday: No bookings  \n• Public holidays: No bookings  \n• Saturday: No bookings after 4 PM  \n• 30 min buffer  \n• No overlaps  \n\n--------------------------------\nFLOW\n--------------------------------\n\n1. Extract:\n   name, email, mobile, date, time, duration (default 60 mins).\n\n2. Use \"appointments\" calendar to check availability.\n\n3. Validate rules.\n\n4. If available:\n   - Create event in \"dr.strange\"\n   - Add row to Google Sheets in format:\n     Name | Email | Mobile No | Date of Appointment | Duration of Appointment | Time Slot Allocated\n   - Send email including:\n     Patient Name\n     Appointment Date\n     Time Slot\n     Duration\n     Doctor Name\n\n5. If unavailable:\n   - Explain conflict\n   - Suggest 2 alternate slots.\n\n--------------------------------\nRESCHEDULE\n--------------------------------\n\nUpdate/delete → recheck → book → update Sheets → send updated email.\n\n--------------------------------\nOUTPUT FORMAT\n--------------------------------\n\nAfter successfully booking an appointment, you MUST end your response with a JSON block on a new line:\n\nJSON_EMAIL_DATA: {\"email_to\": \"patient@email.com\", \"email_subject\": \"Appointment Confirmation - Dr. Strange\", \"email_body\": \"Dear [Patient Name],\\n\\nYour appointment with Dr. Strange has been confirmed.\\n\\nDetails:\\n- Date: [Date]\\n- Time: [Time Slot]\\n- Duration: [Duration] minutes\\n\\nThank you!\"}\n\nReplace the bracketed values with actual patient information.\n\n--------------------------------\nGOAL\n--------------------------------\n\nQuickly understand requests, avoid conflicts, log data in Sheets, and book Dr. Strange appointments correctly.\n\nWhen a user books an appointment, you MUST:\n1. Ask for their email address if not already provided\n2. After confirming the booking, output a JSON object with this exact structure:\n\n{\n  \"email_to\": \"user@example.com\",\n  \"email_subject\": \"Appointment Confirmation - [Date/Time]\",\n  \"email_body\": \"Dear [Name],\\n\\nYour appointment has been confirmed for [Date] at [Time].\\n\\nThank you!\"\n}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1664,
+        160
+      ],
+      "id": "d798379b-9e79-412b-841d-5a1dedcbc8ee",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1536,
+        368
+      ],
+      "id": "a233e3a0-8353-42cf-98a0-4caa7fd28699",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "x1IpWZxbh9DSZkl3",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 50
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1680,
+        368
+      ],
+      "id": "e1670b13-64c0-4768-8a15-03713d559fdc",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "npavankumar553@gmail.com",
+          "mode": "list",
+          "cachedResultName": "npavankumar553@gmail.com"
+        },
+        "start": "={{ $fromAI('Start', '', 'string') }}",
+        "end": "={{ $fromAI('End', '', 'string') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1824,
+        368
+      ],
+      "id": "89bc4a64-0e21-45a4-9e9e-19df6dee7d6f",
+      "name": "Dr.Strange",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "IZvqpAugMqbs2eEn",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "mode": "list",
+          "value": "npavankumar553@gmail.com"
+        },
+        "limit": "={{ $fromAI('Limit', '', 'number') }}",
+        "timeMin": "={{ $fromAI('After', '', 'string') }}",
+        "timeMax": "={{ $fromAI('Before', '', 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1984,
+        368
+      ],
+      "id": "44ef22c7-0ae7-4dfb-9163-1f8c995d6724",
+      "name": "Appointments",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "IZvqpAugMqbs2eEn",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email_to }}",
+        "subject": "={{ $json.email_subject }}",
+        "emailType": "text",
+        "message": "={{ $json.email_body }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2240,
+        160
+      ],
+      "id": "cb0479f0-75dc-423d-a019-af9ce97ac4a0",
+      "name": "Send a message",
+      "webhookId": "8670d179-af0e-4388-9a74-e9e6f3c81162",
+      "notesInFlow": false,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YZ2ydbjbQYGDmhcm",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = $input.first().json.output;\n\nlet emailData = {\n  email_to: '',\n  email_subject: 'Appointment Confirmation - Dr. Strange',\n  email_body: output\n};\n\ntry {\n  // Try to extract JSON_EMAIL_DATA format\n  const jsonMatch = output.match(/JSON_EMAIL_DATA:\\s*(\\{[^}]+\\})/s);\n  if (jsonMatch) {\n    const parsed = JSON.parse(jsonMatch[1]);\n    if (parsed.email_to && parsed.email_to.includes('@')) {\n      emailData = parsed;\n    }\n  } else {\n    // Try to find any JSON object with email_to field\n    const anyJsonMatch = output.match(/\\{[^}]*\"email_to\"[^}]*\\}/s);\n    if (anyJsonMatch) {\n      const parsed = JSON.parse(anyJsonMatch[0]);\n      if (parsed.email_to && parsed.email_to.includes('@')) {\n        emailData = parsed;\n      }\n    }\n  }\n} catch (error) {\n  // If parsing fails, try to extract email from the text\n  const emailMatch = output.match(/\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b/);\n  if (emailMatch) {\n    emailData.email_to = emailMatch[0];\n  }\n}\n\n// If still no email, throw error with helpful message\nif (!emailData.email_to || !emailData.email_to.includes('@')) {\n  throw new Error('Could not extract valid email address from AI output. AI must provide email in JSON format.');\n}\n\nreturn [{ json: emailData }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2032,
+        160
+      ],
+      "id": "7a9046ab-e974-4db0-ae6a-cf9e32096dcf",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dr.Strange": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Appointments": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "611bb4cc-5d1b-46cd-80ea-60f70c4cfb3b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "14ed5357ef305770d439ea6f97e30ae69b74eaea9ad045f5c49d8370df80c0fc"
+  },
+  "id": "roPM42TWD-jiJ0sgNevkm",
+  "tags": []
+}
