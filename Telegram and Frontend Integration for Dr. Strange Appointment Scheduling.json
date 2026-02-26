@@ -1,0 +1,121 @@
+{
+  "name": "Telegram and Frontend Integration for Dr. Strange Appointment Scheduling",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "1c6ba210-2c8e-4315-ac7b-01c6d84b8e07",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        256,
+        432
+      ],
+      "webhookId": "42a01804-407c-41f7-b970-9af509138db3",
+      "credentials": {
+        "telegramApi": {
+          "id": "qs6h5qQ0ow02JHtk",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatId }}",
+        "text": "=Hello {{ $json.userName }}! Welcome to Dr. Strange's appointment scheduling system.\n\nYou said: {{ $json.messageText }}\n\nTo book an appointment, please provide:\n1. Your full name\n2. Preferred date and time\n3. Reason for consultation\n\nHow can I assist you today?",
+        "additionalFields": {}
+      },
+      "id": "1f0cf4aa-d9f6-43b6-9170-9e46820b98bb",
+      "name": "Send Telegram Response",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        704,
+        432
+      ],
+      "webhookId": "87d588ca-3ef5-45c8-8361-b6f5551109d1",
+      "credentials": {
+        "telegramApi": {
+          "id": "qs6h5qQ0ow02JHtk",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "chatId",
+              "value": "={{ $json.message.chat.id }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "messageText",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "userName",
+              "value": "={{ $json.message.from.first_name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "819c0f32-f4ad-4cfe-a139-c355fae1c22a",
+      "name": "Process Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        480,
+        432
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Process Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Message": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "availableInMCP": false
+  },
+  "versionId": "8f735850-9d42-43a5-809e-4b1f074f0188",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "87634fa3290a1620f07db4fde157f30e4a24a123884216a7523d55df96ad4f61"
+  },
+  "id": "dcjYsbBMfHl3fgcf",
+  "tags": []
+}
